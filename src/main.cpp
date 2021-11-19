@@ -114,6 +114,7 @@ void loop() {
       send_fail = true;
       //пора отправлять аварийный запрос на сервер немедленно
       httpRequest();
+      buzzer(5,false);
     }
     if(millis() % 60000 == 0){ // если прошла 1 минута
       DateTime now = rtc.now(); // читаем время с модуля
@@ -121,6 +122,9 @@ void loop() {
         h_curr = now.hour();
         //пора отправлять запрос на сервер, запрос отправляем раз в час
         httpRequest();
+        if(state == FAIL){
+          buzzer(5,false);
+        }
       }
     }
     if(state == NORMAL){
@@ -152,22 +156,22 @@ void check_phases(){
   else{
     l3_fail = false;
   }
-  if(l1_fail | l2_fail | l3_fail)
+  if(l1_fail || l2_fail || l3_fail)
     state = FAIL; //авария фаз
   else
     state = NORMAL; //все в порядке
 }
 
 //генерация звука
-void buzzer(int8_t step = 1, bool _short = true){
-  int _time = 5000;
-  if(_short){
+void buzzer(int8_t step = 1, bool _long = true){
+  int _time = 500;
+  if(_long){
     _time = 1000;
   }
   while(step){
-    analogWrite(buzz, 50); //включаем пьезоизлукатель на 1с
+    digitalWrite(buzz, 1); //включаем пьезоизлучатель на 1с
     delay(_time); // на 1000 мс
-    analogWrite(buzz, 0); //выключаем пьезоизлукатель на 1с
+    digitalWrite(buzz, 0); //выключаем пьезоизлучатель на 1с
     delay(_time);
     --step;
   }
@@ -196,26 +200,6 @@ void setRTC(String dt){
     rtc.adjust(DateTime(year, month, day, hour, minute, sec));
   }
 }
-
-/* DateTime getRTC(void) {
-  DateTime now = rtc.now();
-  #ifdef DEBUG_COM
-  Serial.print(now.year(), DEC);
-  Serial.print('/');
-  Serial.print(now.month(), DEC);
-  Serial.print('/');
-  Serial.print(now.day(), DEC);
-  Serial.print(" ");
-  Serial.print(now.hour(), DEC);
-  Serial.print(':');
-  Serial.print(now.minute(), DEC);
-  Serial.print(':');
-  Serial.print(now.second(), DEC);
-  Serial.println();
-  #endif
-  return now;
-}
- */
 
 // this method makes a HTTP connection to the server:
 void httpRequest() {
