@@ -21,9 +21,9 @@ uint8_t h_alarm = 23; //время синхронизации часов
 
 const uint32_t speed = 115200;
 
-bool l1_fail = false; //флаг аварии луча L1
-bool l2_fail = false; //флаг аварии луча L2
-bool l3_fail = false; //флаг аварии луча L3
+bool l1_fail = false; //флаг аварии системы L1
+bool l2_fail = false; //флаг аварии системы L2
+bool l3_fail = false; //флаг аварии системы L3
 bool good_rtc = false; //флаг статуса работы модуля, true если все ОК
 bool good_lan = false; //флаг статуса работы модуля LAN, true если все ОК
 bool send_fail = false; // флаг отправки сообщения об аварии
