@@ -2,18 +2,19 @@
 #include <Wire.h>
 #include <avr/pgmspace.h>
 
-//#define DEBUG_COM
+#define DEBUG_COM
 
 //назначение пинов Arduino Mega Pro 2560
 const uint8_t L1 = 3; //контроль фазы №1
 const uint8_t L2 = 5; //контроль фазы №2
 const uint8_t L3 = 7; //контроль фазы №3
 const uint8_t L4 = 32; //контроль фазы №4
-const uint8_t L5 = 34; //контроль фазы №5
-const uint8_t L6 = 36; //контроль фазы №6
-const uint8_t L7 = 33; //контроль фазы №7
-const uint8_t L8 = 35; //контроль фазы №8
+const uint8_t L5 = 33; //контроль фазы №5
+const uint8_t L6 = 34; //контроль фазы №6
+const uint8_t L7 = 35; //контроль фазы №7
+const uint8_t L8 = 36; //контроль фазы №8
 const uint8_t L9 = 37; //контроль фазы №9
+const uint8_t thermo = 38; //включение контактора с термостата
 const uint8_t buzz = 23; //пищалка
 const uint8_t CS = 11; //CS pin
 uint8_t h_curr = 0; //текущий час
@@ -24,6 +25,7 @@ const uint32_t speed = 115200;
 bool l1_fail = false; //флаг аварии системы L1
 bool l2_fail = false; //флаг аварии системы L2
 bool l3_fail = false; //флаг аварии системы L3
+bool thermo_on = false; // флаг отключения термостата
 bool good_rtc = false; //флаг статуса работы модуля, true если все ОК
 bool good_lan = false; //флаг статуса работы модуля LAN, true если все ОК
 bool send_fail = false; // флаг отправки сообщения об аварии
@@ -58,6 +60,7 @@ void setup() {
   pinMode(L7, INPUT);
   pinMode(L8, INPUT);
   pinMode(L9, INPUT);
+  pinMode(thermo, INPUT);
   pinMode(buzz, OUTPUT);
   
   pinMode(53, OUTPUT); // иначе не будет работать SPI на меге!!!
@@ -146,7 +149,7 @@ void loop() {
     }
     // контроль наличия фаз
     check_phases();
-    if(state == FAIL && !send_fail){
+    if(state == FAIL && thermo_on && !send_fail){
       // обработка аварийной ситуации
       send_fail = true;
       //пора отправлять аварийный запрос на сервер немедленно
@@ -159,7 +162,7 @@ void loop() {
         h_curr = now.hour();
         //пора отправлять запрос на сервер, запрос отправляем раз в час
         httpRequest();
-        if(state == FAIL){
+        if(state == FAIL && thermo_on){
           buzzer(5,false);
         }
         if(now.hour() == h_alarm) {
@@ -178,6 +181,8 @@ void loop() {
 }
 
 void check_phases(){
+  thermo_on = !digitalRead(thermo); // HIGH отключено or LOW включено
+  
   if((digitalRead(L1) == HIGH) || ( digitalRead(L2) == HIGH) || ( digitalRead(L3) == HIGH) ){
     l1_fail = true;
   }
@@ -261,6 +266,10 @@ void httpRequest() {
     params += "&l3=1";
   else
     params += "&l3=0";
+  if(thermo_on)
+    params += "&thermo=1";
+  else
+    params += "&thermo=0";
   // if there's a successful connection:
   if (client.connect(server, 80)) {
     #ifdef DEBUG_COM
