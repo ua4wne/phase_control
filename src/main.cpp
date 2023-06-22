@@ -160,9 +160,9 @@ void loop() {
       DateTime now = rtc.now(); // читаем время с модуля
       if(now.hour() != h_curr) {
         h_curr = now.hour();
-        //пора отправлять запрос на сервер, запрос отправляем раз в час
-        httpRequest();
         if(state == FAIL && thermo_on){
+           //пора отправлять запрос на сервер, запрос отправляем раз в час
+          httpRequest();
           buzzer(5,false);
         }
         if(now.hour() == h_alarm) {
@@ -266,10 +266,10 @@ void httpRequest() {
     params += "&l3=1";
   else
     params += "&l3=0";
-  if(thermo_on)
-    params += "&thermo=1";
-  else
-    params += "&thermo=0";
+  // if(thermo_on)
+  //   params += "&thermo=1";
+  // else
+  //   params += "&thermo=0";
   // if there's a successful connection:
   if (client.connect(server, 80)) {
     #ifdef DEBUG_COM
